@@ -33,7 +33,7 @@
         android:id="@+id/disconnect_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/connect_button"/>
+        android:text="@string/disconnect_button"/>
 
     <!-- 메세지 전송 버튼 -->
     <Button

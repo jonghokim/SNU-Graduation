@@ -26,10 +26,14 @@ import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
     private static final String TOPIC_PREFIX = "vehicle/";
+
+    private String currentServerIP = ServerConstants.SERVER_FIRST;
+
     private EditText serverEditText;
     private EditText portEditText;
 
     private Button connectionButton;
+    private Button disconnectionButton;
     private Button sendMessageButton;
     private TextView statusView;
 
@@ -49,10 +53,13 @@ public class MainActivity extends AppCompatActivity {
 
         objectMapper = new ObjectMapper();
         serverEditText = (EditText) findViewById(R.id.server_edit_text);
+        serverEditText.setText(currentServerIP);
         portEditText = (EditText) findViewById(R.id.port_edit_text);
+        portEditText.setText(String.valueOf(ServerConstants.PORT_NUMBER));
 
         statusView = (TextView) findViewById(R.id.status_view);
         connectionButton = (Button) findViewById(R.id.connect_button);
+        disconnectionButton = (Button) findViewById(R.id.disconnect_button);
         sendMessageButton = (Button) findViewById(R.id.send_message_button);
         connectionButton.setSelected(false);
 
@@ -60,6 +67,13 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 connectAction(createConnectionAction().getExtras());
+            }
+        });
+
+        disconnectionButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
             }
         });
 
@@ -84,20 +98,20 @@ public class MainActivity extends AppCompatActivity {
         String server = (String) data.get(ActivityConstants.server);
         String clientId = (String) data.get(ActivityConstants.clientId);
         String portString = (String) data.get(ActivityConstants.port);
-        if (Strings.isNullOrEmpty(portString)) {
-            Toast.makeText(this, "포트를 입력해주세요", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        int port = Integer.parseInt(portString);
         boolean cleanSession = (Boolean) data.get(ActivityConstants.cleanSession);
 
-        // TODO:
+        // 연결이 안되면 ip 를 바꿔서 connect 시도한다.
         if (GraduationApplication.shouldChangeServer()) {
-
-        } else {
-
+            if (ServerConstants.SERVER_FIRST.equals(currentServerIP)) {
+                currentServerIP = ServerConstants.SERVER_SECOND;
+            } else {
+                currentServerIP = ServerConstants.SERVER_FIRST;
+            }
+            serverEditText.setText(currentServerIP);
+            GraduationApplication.resetRetryCount();
         }
-        String uri = "tcp://" + server + ":" + port;
+
+        String uri = "tcp://" + currentServerIP + ":" + ServerConstants.PORT_NUMBER;
         MqttAndroidClient client = Connections.getInstance(this).createClient(this, uri, clientId);
 
         // create a client handle
@@ -116,7 +130,7 @@ public class MainActivity extends AppCompatActivity {
         int timeout = data.getInt(ActivityConstants.timeout);
         int keepalive = data.getInt(ActivityConstants.keepalive);
 
-        Connection connection = new Connection(clientHandle, clientId, server, port, this, client, false);
+        Connection connection = new Connection(clientHandle, clientId, server, ServerConstants.PORT_NUMBER, this, client, false);
         connections.add(connection);
 
         // connect client
